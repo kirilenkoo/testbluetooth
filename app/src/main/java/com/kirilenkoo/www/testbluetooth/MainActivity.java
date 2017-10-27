@@ -50,7 +50,8 @@ public class MainActivity extends AppCompatActivity {
                 case MessageConstants.MESSAGE_READ:
                     int numBytes = msg.arg1;
                     byte[] bytes = (byte[]) msg.obj;
-                    Log.d(TAG,""+numBytes+"::"+bytes.toString());
+                    Log.d(TAG,"length:"+numBytes);
+                    Log.d(TAG,"received:"+bytesToHexString(bytes));
                     break;
                 case MessageConstants.MESSAGE_WRITE:
                     Log.d(TAG,"data writed");
@@ -72,11 +73,13 @@ public class MainActivity extends AppCompatActivity {
         textView.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                if(myBluetoothService!=null){
-                    String str =  "kirilenko";
-                    byte[] bytes = str.getBytes();
-                    myBluetoothService.write(bytes);
-                }
+                makeAndSendPackage();
+
+//                if(myBluetoothService!=null){
+//                    String str =  "kirilenko";
+//                    byte[] bytes = str.getBytes();
+//                    myBluetoothService.write(bytes);
+//                }
             }
         });
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
@@ -109,7 +112,7 @@ public class MainActivity extends AppCompatActivity {
         // Register for broadcasts when a device is discovered.
         IntentFilter filter = new IntentFilter(BluetoothDevice.ACTION_FOUND);
         registerReceiver(mReceiver, filter);
-        MY_UUID = UUID.fromString("bc187f36-ba13-11e7-abc4-cec278b6b50a");
+        MY_UUID = UUID.fromString("00001101-0000-1000-8000-00805f9b34fb");
     }
 
     private void connectDevice(String mac) {
@@ -318,4 +321,44 @@ public class MainActivity extends AppCompatActivity {
         stopSearch();
         closeService();
     }
+
+    private void makeAndSendPackage() {
+        byte head = 0x7e;
+        byte type = 0x01;
+        byte[] placeholders = {0x55,0x55,0x55,0x55};
+        byte[] unchecked = {0x01,0x55,0x55,0x55,0x55};
+        byte checkByte = 0x55;
+        for (byte b: unchecked){
+            checkByte ^= b;
+        }
+        byte tail = 0x7f;
+
+        byte[] pack = new byte[8];
+        pack[0] = head;
+        pack[1] = type;
+        System.arraycopy(placeholders,0,pack,2,4);
+        pack[6] = checkByte;
+        pack[7] = tail;
+
+        myBluetoothService.write(pack);
+
+    }
+
+
+    public static String bytesToHexString(byte[] src){
+        StringBuilder stringBuilder = new StringBuilder("");
+        if (src == null || src.length <= 0) {
+            return null;
+        }
+        for (int i = 0; i < src.length; i++) {
+            int v = src[i] & 0xFF;
+            String hv = Integer.toHexString(v);
+            if (hv.length() < 2) {
+                stringBuilder.append(0);
+            }
+            stringBuilder.append(hv);
+        }
+        return stringBuilder.toString();
+    }
+
 }

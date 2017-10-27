@@ -66,7 +66,7 @@ public class ServerActivity extends AppCompatActivity {
                 }
             }
         });
-        MY_UUID = UUID.fromString("bc187f36-ba13-11e7-abc4-cec278b6b50a");
+        MY_UUID = UUID.fromString("00001101-0000-1000-8000-00805f9b34fb");
     }
 
     private boolean checkBlueToothExist(){
